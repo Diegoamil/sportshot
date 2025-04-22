@@ -5,95 +5,139 @@
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Sports Photo Platform with Facial Recognition</title>
-    <script>
-      // Verifica se estamos no EasyPanel
-      if (window.location.hostname.includes('easypanel.host')) {
-        // Override da função importScripts para corrigir MIME type
-        window.importScripts = function(url) {
-          return new Promise((resolve, reject) => {
-            fetch(url)
-              .then(response => response.text())
-              .then(code => {
-                // Executa o código usando eval em vez de importar como módulo
-                try {
-                  eval(code);
-                  resolve();
-                } catch (e) {
-                  reject(e);
-                }
-              })
-              .catch(reject);
-          });
-        };
+    <style>
+      .loading-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(255, 255, 255, 0.9);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 9999;
+        font-family: Arial, sans-serif;
       }
-    </script>
+      .loading-content {
+        text-align: center;
+      }
+      .loading-text {
+        font-size: 24px;
+        margin-top: 20px;
+        color: #333;
+      }
+    </style>
   </head>
   <body>
     <div id="root"></div>
-    <script type="module" src="/src/main.tsx"></script>
-    <!-- Script de fallback que será executado se o módulo falhar ao carregar -->
+    
+    <!-- Loading overlay que será mostrado durante o carregamento -->
+    <div id="loading-overlay" class="loading-overlay">
+      <div class="loading-content">
+        <div class="loading-text">Carregando SportShot...</div>
+      </div>
+    </div>
+    
     <script>
-      // Executa imediatamente para verificar se estamos no EasyPanel
+      // IIFE para isolar o escopo
       (function() {
-        // Função para verificar se estamos no ambiente EasyPanel
+        // Verifica se estamos no ambiente EasyPanel
         function isEasyPanelEnvironment() {
           return window.location.hostname.includes('easypanel.host');
         }
         
-        // Função para carregar a aplicação via fallback
+        // Função para carregar a aplicação via fetch e injeção de conteúdo
         function loadViaFallback() {
           console.log('Carregando aplicação via fallback...');
-          
-          // Remove o script principal se existir
-          const mainScript = document.querySelector('script[src="/src/main.tsx"]');
-          if (mainScript) {
-            mainScript.remove();
-          }
-          
-          // Cria elemento de carregamento
-          const loadingEl = document.createElement('div');
-          loadingEl.innerHTML = 'Carregando SportShot...';
-          loadingEl.style.position = 'fixed';
-          loadingEl.style.top = '50%';
-          loadingEl.style.left = '50%';
-          loadingEl.style.transform = 'translate(-50%, -50%)';
-          loadingEl.style.fontFamily = 'Arial, sans-serif';
-          loadingEl.style.fontSize = '24px';
-          loadingEl.style.color = '#333';
-          document.body.appendChild(loadingEl);
           
           // Determina a URL base para os assets
           const baseUrl = window.location.origin;
           
-          // Carrega os assets diretamente com caminhos absolutos
-          const cssLink = document.createElement('link');
-          cssLink.rel = 'stylesheet';
-          cssLink.href = baseUrl + '/assets/index.DpF1_0n5.css';
-          document.head.appendChild(cssLink);
-          
-          const jsScript = document.createElement('script');
-          jsScript.src = baseUrl + '/assets/index.DpcMrbSZ.js';
-          jsScript.onload = function() {
-            setTimeout(() => loadingEl.remove(), 1000);
-          };
-          jsScript.onerror = function(error) {
-            console.error('Erro ao carregar script:', error);
-            loadingEl.innerHTML = 'Erro ao carregar aplicação. Recarregue a página.';
-            loadingEl.style.color = 'red';
-          };
-          document.body.appendChild(jsScript);
+          // Carrega o CSS primeiro
+          fetch(baseUrl + '/assets/index.DpF1_0n5.css')
+            .then(response => {
+              if (!response.ok) throw new Error('Falha ao carregar CSS');
+              return response.text();
+            })
+            .then(cssContent => {
+              // Injeta o CSS na página
+              const styleEl = document.createElement('style');
+              styleEl.textContent = cssContent;
+              document.head.appendChild(styleEl);
+              
+              // Agora carrega o JavaScript
+              return fetch(baseUrl + '/assets/index.DpcMrbSZ.js');
+            })
+            .then(response => {
+              if (!response.ok) throw new Error('Falha ao carregar JavaScript');
+              return response.text();
+            })
+            .then(jsContent => {
+              // Verifica se o conteúdo parece ser HTML (erro comum)
+              if (jsContent.trim().startsWith('<!DOCTYPE') || jsContent.trim().startsWith('<html')) {
+                throw new Error('Recebeu HTML em vez de JavaScript');
+              }
+              
+              // Cria um novo script e injeta o conteúdo
+              const scriptEl = document.createElement('script');
+              scriptEl.textContent = jsContent;
+              document.body.appendChild(scriptEl);
+              
+              // Remove o overlay de carregamento após um pequeno delay
+              setTimeout(() => {
+                const loadingOverlay = document.getElementById('loading-overlay');
+                if (loadingOverlay) {
+                  loadingOverlay.style.opacity = '0';
+                  loadingOverlay.style.transition = 'opacity 0.5s';
+                  setTimeout(() => loadingOverlay.remove(), 500);
+                }
+              }, 1000);
+            })
+            .catch(error => {
+              console.error('Erro no fallback:', error);
+              const loadingText = document.querySelector('.loading-text');
+              if (loadingText) {
+                loadingText.textContent = 'Erro ao carregar aplicação. Por favor, recarregue a página.';
+                loadingText.style.color = 'red';
+              }
+            });
         }
         
         // Se estamos no EasyPanel, carrega via fallback imediatamente
         if (isEasyPanelEnvironment()) {
-          document.addEventListener('DOMContentLoaded', loadViaFallback);
+          // Não precisamos esperar pelo DOMContentLoaded pois o script está no final do body
+          loadViaFallback();
+        } else {
+          // Se não estamos no EasyPanel, carrega normalmente e remove o overlay
+          const script = document.createElement('script');
+          script.type = 'module';
+          script.src = '/src/main.tsx';
+          script.onerror = function(e) {
+            // Fallback se ocorrer erro mesmo fora do EasyPanel
+            if (e.message && e.message.includes('MIME type')) {
+              loadViaFallback();
+            }
+          };
+          document.body.appendChild(script);
+          
+          // Remove o overlay após um pequeno delay
+          setTimeout(() => {
+            const loadingOverlay = document.getElementById('loading-overlay');
+            if (loadingOverlay) {
+              loadingOverlay.style.opacity = '0';
+              loadingOverlay.style.transition = 'opacity 0.5s';
+              setTimeout(() => loadingOverlay.remove(), 500);
+            }
+          }, 1000);
         }
         
-        // Captura erros de MIME type para casos onde a detecção prévia falha
+        // Captura erros globais como backup
         window.addEventListener('error', function(e) {
-          // Verifica se o erro é relacionado a MIME type
-          if (e.message && e.message.includes('MIME type')) {
+          if (e.message && (e.message.includes('MIME type') || e.message.includes('Unexpected token'))) {
             loadViaFallback();
+            // Previne que o erro seja exibido no console
+            e.preventDefault();
           }
         }, true);
       })();
