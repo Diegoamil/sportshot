@@ -33,12 +33,22 @@
     <script type="module" src="/src/main.tsx"></script>
     <!-- Script de fallback que será executado se o módulo falhar ao carregar -->
     <script>
-      window.addEventListener('error', function(e) {
-        // Verifica se o erro é relacionado a MIME type
-        if (e.message && e.message.includes('MIME type') && document.querySelector('script[src="/src/main.tsx"]')) {
-          console.log('Detectado erro de MIME type, carregando via fallback...');
-          // Remove o script com erro
-          document.querySelector('script[src="/src/main.tsx"]').remove();
+      // Executa imediatamente para verificar se estamos no EasyPanel
+      (function() {
+        // Função para verificar se estamos no ambiente EasyPanel
+        function isEasyPanelEnvironment() {
+          return window.location.hostname.includes('easypanel.host');
+        }
+        
+        // Função para carregar a aplicação via fallback
+        function loadViaFallback() {
+          console.log('Carregando aplicação via fallback...');
+          
+          // Remove o script principal se existir
+          const mainScript = document.querySelector('script[src="/src/main.tsx"]');
+          if (mainScript) {
+            mainScript.remove();
+          }
           
           // Cria elemento de carregamento
           const loadingEl = document.createElement('div');
@@ -52,24 +62,41 @@
           loadingEl.style.color = '#333';
           document.body.appendChild(loadingEl);
           
-          // Carrega os assets diretamente
+          // Determina a URL base para os assets
+          const baseUrl = window.location.origin;
+          
+          // Carrega os assets diretamente com caminhos absolutos
           const cssLink = document.createElement('link');
           cssLink.rel = 'stylesheet';
-          cssLink.href = '/assets/index.css';
+          cssLink.href = baseUrl + '/assets/index.DpF1_0n5.css';
           document.head.appendChild(cssLink);
           
           const jsScript = document.createElement('script');
-          jsScript.src = '/assets/index.js';
+          jsScript.src = baseUrl + '/assets/index.DpcMrbSZ.js';
           jsScript.onload = function() {
             setTimeout(() => loadingEl.remove(), 1000);
           };
-          jsScript.onerror = function() {
-            loadingEl.innerHTML = 'Erro ao carregar aplicação';
+          jsScript.onerror = function(error) {
+            console.error('Erro ao carregar script:', error);
+            loadingEl.innerHTML = 'Erro ao carregar aplicação. Recarregue a página.';
             loadingEl.style.color = 'red';
           };
           document.body.appendChild(jsScript);
         }
-      }, true);
+        
+        // Se estamos no EasyPanel, carrega via fallback imediatamente
+        if (isEasyPanelEnvironment()) {
+          document.addEventListener('DOMContentLoaded', loadViaFallback);
+        }
+        
+        // Captura erros de MIME type para casos onde a detecção prévia falha
+        window.addEventListener('error', function(e) {
+          // Verifica se o erro é relacionado a MIME type
+          if (e.message && e.message.includes('MIME type')) {
+            loadViaFallback();
+          }
+        }, true);
+      })();
     </script>
   </body>
 </html>
