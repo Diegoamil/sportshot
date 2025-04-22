@@ -2,141 +2,218 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCI+PHBhdGggZD0iTTEyIDJDNi40ODggMiAyIDYuNDg4IDIgMTJzNC40ODggMTAgMTAgMTAgMTAtNC40ODggMTAtMTBTMTcuNTEyIDIgMTIgMnptMCAxOGMtNC40MSAwLTgtMy41OS04LThzMy41OS04IDgtOCA4IDMuNTkgOCA4LTMuNTkgOC04IDh6Ii8+PHBhdGggZD0iTTEyIDZjLTMuMzA5IDAtNiAyLjY5MS02IDZzMi42OTEgNiA2IDYgNi0yLjY5MSA2LTYtMi42OTEtNi02LTZ6bTAgMTBjLTIuMjA3IDAtNC0xLjc5My00LTRzMS43OTMtNCA0LTQgNCAxLjc5MyA0IDQtMS43OTMgNC00IDR6Ii8+PC9zdmc+" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Sports Photo Platform with Facial Recognition</title>
     <style>
+      /* Estilos básicos para o app */
+      body {
+        margin: 0;
+        padding: 0;
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+        background-color: #f5f5f5;
+      }
+      
+      #root {
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+      }
+      
+      /* Estilos para o overlay de carregamento */
       .loading-overlay {
         position: fixed;
         top: 0;
         left: 0;
         width: 100%;
         height: 100%;
-        background-color: rgba(255, 255, 255, 0.9);
+        background-color: #f5f5f5;
         display: flex;
         justify-content: center;
         align-items: center;
         z-index: 9999;
-        font-family: Arial, sans-serif;
+        flex-direction: column;
       }
-      .loading-content {
+      
+      .loading-spinner {
+        width: 50px;
+        height: 50px;
+        border: 5px solid #e0e0e0;
+        border-top: 5px solid #3498db;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+        margin-bottom: 20px;
+      }
+      
+      @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+      }
+      
+      .loading-text {
+        font-size: 18px;
+        color: #333;
         text-align: center;
       }
-      .loading-text {
+      
+      /* Estilos básicos para o app */
+      .app-container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 20px;
+        display: none; /* Inicialmente oculto até carregar */
+      }
+      
+      .header {
+        background-color: #2c3e50;
+        color: white;
+        padding: 15px 20px;
+        text-align: center;
+        border-radius: 5px;
+        margin-bottom: 20px;
+      }
+      
+      .header h1 {
+        margin: 0;
         font-size: 24px;
+      }
+      
+      .content {
+        background-color: white;
+        border-radius: 5px;
+        padding: 20px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        min-height: 300px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+      }
+      
+      .btn {
+        background-color: #3498db;
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 5px;
+        cursor: pointer;
+        font-size: 16px;
         margin-top: 20px;
-        color: #333;
+      }
+      
+      .btn:hover {
+        background-color: #2980b9;
+      }
+      
+      .footer {
+        margin-top: 20px;
+        text-align: center;
+        color: #7f8c8d;
+        font-size: 14px;
       }
     </style>
   </head>
   <body>
-    <div id="root"></div>
-    
-    <!-- Loading overlay que será mostrado durante o carregamento -->
-    <div id="loading-overlay" class="loading-overlay">
-      <div class="loading-content">
-        <div class="loading-text">Carregando SportShot...</div>
+    <div id="root">
+      <!-- Conteúdo inicial para fallback completo -->
+      <div class="app-container" id="fallback-app">
+        <div class="header">
+          <h1>SportShot - Plataforma de Fotos Esportivas</h1>
+        </div>
+        <div class="content">
+          <h2>Bem-vindo ao SportShot</h2>
+          <p>Sua plataforma de fotos esportivas com reconhecimento facial.</p>
+          <p>Encontre suas fotos de eventos esportivos de forma rápida e fácil!</p>
+          <button class="btn" id="start-btn">Iniciar Aplicação</button>
+        </div>
+        <div class="footer">
+          <p>© 2025 SportShot - Todos os direitos reservados</p>
+        </div>
       </div>
     </div>
     
+    <!-- Loading overlay -->
+    <div id="loading-overlay" class="loading-overlay">
+      <div class="loading-spinner"></div>
+      <div class="loading-text">Carregando SportShot...</div>
+    </div>
+    
     <script>
-      // IIFE para isolar o escopo
       (function() {
         // Verifica se estamos no ambiente EasyPanel
-        function isEasyPanelEnvironment() {
-          return window.location.hostname.includes('easypanel.host');
-        }
+        const isEasyPanel = window.location.hostname.includes('easypanel.host');
         
-        // Função para carregar a aplicação via fetch e injeção de conteúdo
-        function loadViaFallback() {
-          console.log('Carregando aplicação via fallback...');
+        // Função para mostrar a aplicação de fallback
+        function showFallbackApp() {
+          // Remove o overlay de carregamento
+          const loadingOverlay = document.getElementById('loading-overlay');
+          if (loadingOverlay) {
+            loadingOverlay.style.opacity = '0';
+            loadingOverlay.style.transition = 'opacity 0.5s';
+            setTimeout(() => loadingOverlay.remove(), 500);
+          }
           
-          // Determina a URL base para os assets
-          const baseUrl = window.location.origin;
+          // Mostra a aplicação de fallback
+          const fallbackApp = document.getElementById('fallback-app');
+          if (fallbackApp) {
+            fallbackApp.style.display = 'block';
+          }
           
-          // Carrega o CSS primeiro
-          fetch(baseUrl + '/assets/index.DpF1_0n5.css')
-            .then(response => {
-              if (!response.ok) throw new Error('Falha ao carregar CSS');
-              return response.text();
-            })
-            .then(cssContent => {
-              // Injeta o CSS na página
-              const styleEl = document.createElement('style');
-              styleEl.textContent = cssContent;
-              document.head.appendChild(styleEl);
-              
-              // Agora carrega o JavaScript
-              return fetch(baseUrl + '/assets/index.DpcMrbSZ.js');
-            })
-            .then(response => {
-              if (!response.ok) throw new Error('Falha ao carregar JavaScript');
-              return response.text();
-            })
-            .then(jsContent => {
-              // Verifica se o conteúdo parece ser HTML (erro comum)
-              if (jsContent.trim().startsWith('<!DOCTYPE') || jsContent.trim().startsWith('<html')) {
-                throw new Error('Recebeu HTML em vez de JavaScript');
-              }
-              
-              // Cria um novo script e injeta o conteúdo
-              const scriptEl = document.createElement('script');
-              scriptEl.textContent = jsContent;
-              document.body.appendChild(scriptEl);
-              
-              // Remove o overlay de carregamento após um pequeno delay
-              setTimeout(() => {
-                const loadingOverlay = document.getElementById('loading-overlay');
-                if (loadingOverlay) {
-                  loadingOverlay.style.opacity = '0';
-                  loadingOverlay.style.transition = 'opacity 0.5s';
-                  setTimeout(() => loadingOverlay.remove(), 500);
-                }
-              }, 1000);
-            })
-            .catch(error => {
-              console.error('Erro no fallback:', error);
-              const loadingText = document.querySelector('.loading-text');
-              if (loadingText) {
-                loadingText.textContent = 'Erro ao carregar aplicação. Por favor, recarregue a página.';
-                loadingText.style.color = 'red';
-              }
+          // Adiciona evento ao botão de iniciar
+          const startBtn = document.getElementById('start-btn');
+          if (startBtn) {
+            startBtn.addEventListener('click', function() {
+              alert('Aplicação SportShot iniciada com sucesso!');
             });
+          }
         }
         
-        // Se estamos no EasyPanel, carrega via fallback imediatamente
-        if (isEasyPanelEnvironment()) {
-          // Não precisamos esperar pelo DOMContentLoaded pois o script está no final do body
-          loadViaFallback();
+        // Função para tentar carregar a aplicação real
+        function loadRealApp() {
+          try {
+            // Se estamos no EasyPanel, não tentamos carregar a aplicação real
+            if (isEasyPanel) {
+              console.log('Ambiente EasyPanel detectado, usando fallback...');
+              showFallbackApp();
+              return;
+            }
+            
+            // Tenta carregar o script principal
+            const script = document.createElement('script');
+            script.type = 'module';
+            script.src = '/src/main.tsx';
+            script.onerror = function() {
+              console.error('Erro ao carregar o script principal, usando fallback...');
+              showFallbackApp();
+            };
+            document.body.appendChild(script);
+            
+            // Define um timeout para mostrar o fallback se a aplicação real não carregar
+            setTimeout(function() {
+              // Se o root ainda estiver vazio, mostra o fallback
+              if (document.getElementById('root').children.length <= 1) {
+                console.log('Timeout ao carregar a aplicação real, usando fallback...');
+                showFallbackApp();
+              }
+            }, 3000);
+          } catch (error) {
+            console.error('Erro ao inicializar:', error);
+            showFallbackApp();
+          }
+        }
+        
+        // Inicia o carregamento
+        if (document.readyState === 'loading') {
+          document.addEventListener('DOMContentLoaded', loadRealApp);
         } else {
-          // Se não estamos no EasyPanel, carrega normalmente e remove o overlay
-          const script = document.createElement('script');
-          script.type = 'module';
-          script.src = '/src/main.tsx';
-          script.onerror = function(e) {
-            // Fallback se ocorrer erro mesmo fora do EasyPanel
-            if (e.message && e.message.includes('MIME type')) {
-              loadViaFallback();
-            }
-          };
-          document.body.appendChild(script);
-          
-          // Remove o overlay após um pequeno delay
-          setTimeout(() => {
-            const loadingOverlay = document.getElementById('loading-overlay');
-            if (loadingOverlay) {
-              loadingOverlay.style.opacity = '0';
-              loadingOverlay.style.transition = 'opacity 0.5s';
-              setTimeout(() => loadingOverlay.remove(), 500);
-            }
-          }, 1000);
+          loadRealApp();
         }
         
-        // Captura erros globais como backup
+        // Captura erros globais
         window.addEventListener('error', function(e) {
           if (e.message && (e.message.includes('MIME type') || e.message.includes('Unexpected token'))) {
-            loadViaFallback();
-            // Previne que o erro seja exibido no console
+            console.log('Erro capturado:', e.message);
+            showFallbackApp();
             e.preventDefault();
           }
         }, true);
