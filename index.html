@@ -5,11 +5,71 @@
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Sports Photo Platform with Facial Recognition</title>
-    <!-- Script para corrigir problemas de MIME type no EasyPanel -->
-    <script src="/fixmime.js"></script>
+    <script>
+      // Verifica se estamos no EasyPanel
+      if (window.location.hostname.includes('easypanel.host')) {
+        // Override da função importScripts para corrigir MIME type
+        window.importScripts = function(url) {
+          return new Promise((resolve, reject) => {
+            fetch(url)
+              .then(response => response.text())
+              .then(code => {
+                // Executa o código usando eval em vez de importar como módulo
+                try {
+                  eval(code);
+                  resolve();
+                } catch (e) {
+                  reject(e);
+                }
+              })
+              .catch(reject);
+          });
+        };
+      }
+    </script>
   </head>
   <body>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
+    <!-- Script de fallback que será executado se o módulo falhar ao carregar -->
+    <script>
+      window.addEventListener('error', function(e) {
+        // Verifica se o erro é relacionado a MIME type
+        if (e.message && e.message.includes('MIME type') && document.querySelector('script[src="/src/main.tsx"]')) {
+          console.log('Detectado erro de MIME type, carregando via fallback...');
+          // Remove o script com erro
+          document.querySelector('script[src="/src/main.tsx"]').remove();
+          
+          // Cria elemento de carregamento
+          const loadingEl = document.createElement('div');
+          loadingEl.innerHTML = 'Carregando SportShot...';
+          loadingEl.style.position = 'fixed';
+          loadingEl.style.top = '50%';
+          loadingEl.style.left = '50%';
+          loadingEl.style.transform = 'translate(-50%, -50%)';
+          loadingEl.style.fontFamily = 'Arial, sans-serif';
+          loadingEl.style.fontSize = '24px';
+          loadingEl.style.color = '#333';
+          document.body.appendChild(loadingEl);
+          
+          // Carrega os assets diretamente
+          const cssLink = document.createElement('link');
+          cssLink.rel = 'stylesheet';
+          cssLink.href = '/assets/index.css';
+          document.head.appendChild(cssLink);
+          
+          const jsScript = document.createElement('script');
+          jsScript.src = '/assets/index.js';
+          jsScript.onload = function() {
+            setTimeout(() => loadingEl.remove(), 1000);
+          };
+          jsScript.onerror = function() {
+            loadingEl.innerHTML = 'Erro ao carregar aplicação';
+            loadingEl.style.color = 'red';
+          };
+          document.body.appendChild(jsScript);
+        }
+      }, true);
+    </script>
   </body>
 </html>
