@@ -1,0 +1,56 @@
+/* Importar a fonte Poppins do Google Fonts */
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@100;200;300;400;500;600;700;800;900&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Animações personalizadas para o LoadingOverlay */
+@keyframes spin-slow {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+@keyframes spin-reverse {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(-360deg); }
+}
+
+@keyframes progress {
+  0% { width: 0%; }
+  50% { width: 70%; }
+  100% { width: 100%; }
+}
+
+@layer utilities {
+  .animate-spin-slow {
+    animation: spin-slow 3s linear infinite;
+  }
+  
+  .animate-spin-reverse {
+    animation: spin-reverse 2s linear infinite;
+  }
+  
+  .animate-progress {
+    animation: progress 2s ease-in-out infinite;
+  }
+}
+
+/* Aplicar Poppins como fonte padrão */
+@layer base {
+  html {
+    font-family: 'Poppins', sans-serif;
+  }
+}
+
+/* Ocultar scrollbar mas manter a funcionalidade */
+@layer utilities {
+  .hide-scrollbar {
+    -ms-overflow-style: none;  /* IE e Edge */
+    scrollbar-width: none;  /* Firefox */
+  }
+  
+  .hide-scrollbar::-webkit-scrollbar {
+    display: none; /* Chrome, Safari e Opera */
+  }
+}
