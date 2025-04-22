@@ -1,6 +1,5 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
-import { resolve } from 'path';
 
 // https://vitejs.dev/config/
 export default defineConfig({
@@ -19,13 +18,16 @@ export default defineConfig({
         chunkFileNames: 'assets/[name].[hash].js',
         assetFileNames: 'assets/[name].[hash].[ext]'
       }
-    }
+    },
+    // Copia arquivos estáticos para a pasta dist
+    copyPublicDir: true
   },
   // Adiciona base path para deploy em subdiretórios
   base: './',
-  resolve: {
-    alias: {
-      '@': resolve(__dirname, 'src')
-    }
+  // Configuração do servidor de desenvolvimento
+  server: {
+    port: 3000,
+    host: true,
+    cors: true
   }
 });

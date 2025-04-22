@@ -1,0 +1,14 @@
+version: '3'
+
+services:
+  sportshot:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+      - ./dist:/app/dist
+    ports:
+      - "80:80"
+    environment:
+      - NODE_ENV=production
+    restart: always
