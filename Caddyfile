@@ -1,0 +1,43 @@
+:80 {
+    root * /usr/share/caddy
+    encode gzip
+
+    # Configuração para SPA (Single Page Application)
+    try_files {path} /index.html
+
+    # Definir MIME types corretamente
+    @js {
+        path *.js
+    }
+    header @js Content-Type "application/javascript"
+
+    @jsx {
+        path *.jsx *.tsx
+    }
+    header @jsx Content-Type "application/javascript"
+
+    @css {
+        path *.css
+    }
+    header @css Content-Type "text/css"
+
+    @svg {
+        path *.svg
+    }
+    header @svg Content-Type "image/svg+xml"
+
+    # Configurações para caching e segurança
+    header {
+        # Permitir CORS
+        Access-Control-Allow-Origin *
+        # Prevenir cache para desenvolvimento
+        Cache-Control "no-cache, no-store, must-revalidate"
+        # Segurança básica
+        X-Content-Type-Options "nosniff"
+        X-Frame-Options "DENY"
+        Referrer-Policy "strict-origin-when-cross-origin"
+    }
+
+    # Servir arquivos estáticos
+    file_server
+}
